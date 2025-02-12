@@ -114,4 +114,4 @@ This project is under active development. Features and documentation will be upd
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/cgoncalves94/multi_agent_system/blob/main/LICENSE) file for details.
