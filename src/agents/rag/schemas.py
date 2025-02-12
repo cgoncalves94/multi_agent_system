@@ -3,7 +3,7 @@
 from typing import List, Dict, Optional, Any
 from typing_extensions import TypedDict
 from pydantic import BaseModel
-from agents.schemas import AgentState
+from src.agents.orchestrator.schemas import AgentState
 
 
 # RAG Response Schema

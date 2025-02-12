@@ -2,20 +2,25 @@
 
 from typing import Any
 import aiosqlite
-from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
+from langchain_core.messages import (
+    SystemMessage,
+    AIMessage,
+    HumanMessage,
+    RemoveMessage,
+)
 from langgraph.graph import StateGraph, START, END
 
-from agents.schemas import (
+from src.agents.orchestrator.schemas import (
     AgentState,
     RouterReturn,
     SynthesisReturn,
     SummaryReturn,
     AnswerReturn,
 )
-from agents.researcher.graph import create_research_graph
-from agents.rag.graph import create_rag_graph
-from agents.prompts import ROUTER_SYSTEM_PROMPT, ANSWER_PROMPT
-from agents.config import get_model, env
+from src.agents.researcher.graph import create_research_graph
+from src.agents.rag.graph import create_rag_graph
+from src.agents.orchestrator.prompts import ROUTER_SYSTEM_PROMPT, ANSWER_PROMPT
+from src.config import get_model, env
 
 # Initialize model for routing and summarization using shared configuration
 model = get_model()
@@ -49,8 +54,9 @@ async def summarize_conversation(state: AgentState) -> SummaryReturn:
     messages_for_summary = messages + [HumanMessage(content=summary_prompt)]
     response = await model.ainvoke(messages_for_summary)
 
-    # Keep the last 2 messages (usually the latest human-AI exchange)
-    kept_messages = messages[-2:] if len(messages) >= 2 else messages
+    # Keep only the last exchange (2 messages) and add summary
+    messages_to_delete = messages[:-2] if len(messages) > 2 else []
+    delete_messages = [RemoveMessage(id=m.id) for m in messages_to_delete]
 
     # Add summary as system message before the kept messages
     summary_msg = SystemMessage(
@@ -59,7 +65,7 @@ async def summarize_conversation(state: AgentState) -> SummaryReturn:
 
     return {
         "summary": response.content,
-        "messages": [summary_msg] + kept_messages,
+        "messages": delete_messages + [summary_msg],
         "next": "route",
     }
 
@@ -180,7 +186,7 @@ def should_summarize(state: AgentState) -> bool:
     messages = state["messages"]
 
     # First check message count - summarize if more than threshold
-    if len(messages) > 6:  # Number of messages to summarize
+    if len(messages) > 10:  # Only summarize after 10 messages
         # Only summarize after an AI response (complete exchange)
         last_message = messages[-1]
 

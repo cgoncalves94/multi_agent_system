@@ -4,17 +4,17 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 import re
 
-from agents.rag.prompts import (
+from src.agents.rag.prompts import (
     QUERY_OPTIMIZATION_PROMPT,
     CONTEXT_ANALYSIS_PROMPT,
     ANSWER_GENERATION_PROMPT,
     DOCUMENT_PROCESSING_PROMPT,
 )
-from agents.rag.tools import ingest_document, retrieve_context
-from agents.rag.schemas import RAGState, RAGOutputState, OptimizedQuery, RAGResponse
-from utils.file_utils import read_file
-from agents.config import get_model
-from utils import format_conversation_history, get_recent_messages
+from src.agents.rag.tools import ingest_document, retrieve_context
+from src.agents.rag.schemas import RAGState, RAGOutputState, OptimizedQuery, RAGResponse
+from src.utils.file_utils import read_file
+from src.config import get_model
+from src.utils import format_conversation_history, get_recent_messages
 
 # Initialize model using shared configuration
 model = get_model()
@@ -169,6 +169,7 @@ async def retrieve_node(state: RAGState) -> RAGState:
 async def answer_query_node(state: RAGState) -> RAGOutputState:
     """Node to generate a focused answer based on context analysis."""
     optimized_query = state.get("optimized_query", "")
+    original_query = state.get("original_query", "")
     analysis = state.get("analysis")
 
     if not optimized_query or not analysis:
@@ -184,7 +185,9 @@ async def answer_query_node(state: RAGState) -> RAGOutputState:
         [
             SystemMessage(
                 content=ANSWER_GENERATION_PROMPT.format(
-                    query=optimized_query, analysis=analysis
+                    query=optimized_query,
+                    original_query=original_query,
+                    analysis=analysis,
                 )
             )
         ]

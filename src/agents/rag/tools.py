@@ -7,7 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 import os
 from langchain_core.documents import Document
-from agents.config import get_embeddings, env
+from src.config import get_embeddings, env
 
 # Initialize components
 embeddings = get_embeddings()

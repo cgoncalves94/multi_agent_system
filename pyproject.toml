@@ -1,7 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "multi-agent"
+name = "multi_agent_system"
 version = "0.1.0"
-description = "Multi-agent system for research and RAG"
+description = "A sophisticated multi-agent system using LangChain and LangGraph"
 requires-python = ">=3.11"
 authors = [
     {name = "Cesar Goncalves", email = "goncalves.cesaraugusto94@gmail.com"},
@@ -21,14 +25,9 @@ dependencies = [
     "rich"
 ]
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [tool.setuptools]
-packages = ["agents"]  # Explicitly define packages
-package-dir = {"" = "."}  # Root directory for packages
+package-dir = {"" = "src"}
+packages = ["agents", "utils"]
 
-# Exclude data directory from package
-[tool.setuptools.exclude-package-data]
-"*" = ["data/*"]
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.yaml", "*.yml"]

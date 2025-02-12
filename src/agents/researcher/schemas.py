@@ -2,7 +2,7 @@
 
 from typing import TypedDict, Optional
 from pydantic import BaseModel, Field
-from agents.schemas import AgentState
+from src.agents.orchestrator.schemas import AgentState
 
 
 # Research Response Schema

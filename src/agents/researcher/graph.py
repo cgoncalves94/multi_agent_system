@@ -2,16 +2,16 @@
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
-from agents.researcher.prompts import QUERY_EXTRACTION_PROMPT, SYNTHESIS_PROMPT
-from agents.researcher.tools import tavily_search, wikipedia_search
-from agents.researcher.schemas import (
+from src.agents.researcher.prompts import QUERY_EXTRACTION_PROMPT, SYNTHESIS_PROMPT
+from src.agents.researcher.tools import tavily_search, wikipedia_search
+from src.agents.researcher.schemas import (
     ResearchOutputState,
     ResearchState,
     SearchQueries,
     ResearchResponse,
 )
-from agents.config import get_model
-from utils import format_conversation_history, get_recent_messages
+from src.config import get_model
+from src.utils import format_conversation_history, get_recent_messages
 
 # Initialize model using shared configuration
 model = get_model()

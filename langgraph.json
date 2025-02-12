@@ -1,7 +1,7 @@
 {
   "dockerfile_lines": [],
   "graphs": {
-    "agent": "./agents/graph.py:create_graph"
+    "agent": "./src/agents/orchestrator/graph.py:create_graph"
   },
   "env": "./.env",
   "python_version": "3.12",

@@ -59,7 +59,8 @@ Rules:
 4. If information is found, present it clearly with the [Answer]/[Sources] format
 5. If no information is found, simply state that directly
 
-Query: {query}
+Original User Query: {original_query}
+Optimized Search Query: {query}
 
 Context Analysis:
 {analysis}
