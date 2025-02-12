@@ -31,4 +31,4 @@ package-dir = {"" = "."}  # Root directory for packages
 
 # Exclude data directory from package
 [tool.setuptools.exclude-package-data]
-"*" = ["data/*"] 
+"*" = ["data/*"]

@@ -1,1 +1,1 @@
-"""Multi-agent system package.""" 
+"""Multi-agent system package."""

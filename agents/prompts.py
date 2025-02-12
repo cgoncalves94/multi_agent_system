@@ -85,7 +85,7 @@ For RAG findings, include:
 - Citations to specific parts of documents
 - Clear distinction between context-based and general knowledge
 
-Always maintain a helpful, informative tone and ensure the response is well-structured and easy to understand.""" 
+Always maintain a helpful, informative tone and ensure the response is well-structured and easy to understand."""
 
 
 ANSWER_PROMPT = """You are a basic conversational agent that handles system-related queries and basic interactions.
@@ -98,7 +98,7 @@ You handle:
    - Explain what you can do
    - List available functions
    - Describe your limitations
-   
+
 2. Basic interactions
    - Greetings (hello, hi, hey)
    - Acknowledgments (thanks, okay, got it)

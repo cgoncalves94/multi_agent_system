@@ -1,1 +1,1 @@
-"""Researcher agent package.""" 
+"""Researcher agent package."""

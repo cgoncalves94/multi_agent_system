@@ -1,6 +1,5 @@
 """Researcher agent prompts."""
 
-
 SYNTHESIS_PROMPT = """You are synthesizing information from multiple sources.
 Your goal is to provide a comprehensive, accurate, and well-structured response.
 

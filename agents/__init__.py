@@ -1,1 +1,1 @@
-"""Agents package containing all agent implementations.""" 
+"""Agents package containing all agent implementations."""

@@ -93,4 +93,4 @@ Analyze the message and determine if it's requesting document processing.
 Output only "true" or "false".
 
 Message to analyze:
-{message}""" 
+{message}"""
