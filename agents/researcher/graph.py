@@ -1,31 +1,31 @@
 """Researcher agent graph definition."""
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from agents.researcher.prompts import QUERY_EXTRACTION_PROMPT, SYNTHESIS_PROMPT
 from agents.researcher.tools import tavily_search, wikipedia_search
 from agents.researcher.schemas import (
     ResearchOutputState, ResearchState, SearchQueries, ResearchResponse
 )
+from agents.config import get_model
+from utils import format_conversation_history, get_recent_messages
 
-# Initialize model
-model = ChatOpenAI(
-    model="gpt-4o",
-    temperature=0.7,
-    streaming=True
-)
+# Initialize model using shared configuration
+model = get_model()
 
-
+# Nodes
 async def extract_query(state: ResearchState) -> ResearchState:
     """Extract optimized search queries for different sources."""
-    message = state["messages"][-1].content if state.get("messages") else ""
-    if not message:
+    messages = state.get("messages", [])
+    if not messages:
         return {"web_query": "", "wiki_query": ""}
     
-    # Use structured output for query extraction - using ainvoke for async
+    # Get recent context, excluding the current message
+    context = format_conversation_history(get_recent_messages(messages, exclude_last=True))
+    
+    # Use structured output for query extraction
     response = await model.with_structured_output(SearchQueries).ainvoke([
-        SystemMessage(content=QUERY_EXTRACTION_PROMPT),
-        HumanMessage(content=message)
+        SystemMessage(content=QUERY_EXTRACTION_PROMPT.format(context=context)),
+        HumanMessage(content=messages[-1].content)
     ])
     
     return {
@@ -97,6 +97,7 @@ async def combine_results(state: ResearchState) -> ResearchOutputState:
         )
     )
 
+# Graph
 def create_research_graph() -> StateGraph:
     """Create the research sub-graph without compiling."""
     # Create graph with proper state typing

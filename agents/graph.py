@@ -1,9 +1,7 @@
 """Main graph builder that compiles all sub-graphs."""
-import os
 from typing import Any
 import aiosqlite
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 
 from agents.schemas import AgentState, RouterReturn, SynthesisReturn, SummaryReturn, AnswerReturn
@@ -13,9 +11,10 @@ from agents.prompts import (
     ROUTER_SYSTEM_PROMPT,
     ANSWER_PROMPT
 )
+from agents.config import get_model, env
 
-# Initialize model for routing and summarization
-model = ChatOpenAI(model="gpt-4o", temperature=0.7, streaming=True)
+# Initialize model for routing and summarization using shared configuration
+model = get_model()
 
 # Conditionally import SQLite components
 try:
@@ -23,10 +22,6 @@ try:
     SQLITE_AVAILABLE = True
 except ImportError:
     SQLITE_AVAILABLE = False
-
-# Setup SQLite path
-db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "state_db", "agent.db")
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
 # Node functions
 
@@ -80,12 +75,20 @@ You can now ask questions about this document!""")]
             }
         
         if source == "answer_query" and (rag_analysis := rag_response.get("rag_analysis")):
-            # Clean up the response by removing placeholders and making it more conversational
-            cleaned_response = rag_analysis.replace("[Answer]", "").replace("[Sources]", "\nBased on:").strip()
-            return {
-                "messages": [AIMessage(content=f"""Here's what I found in the document:
+            # If response has [Answer], it means we found information
+            has_answer = "[Answer]" in rag_analysis
+            
+            if has_answer:
+                # Clean up the markers and add the "found" prefix
+                content = f"""Here's what I found in the document:
 
-{cleaned_response}""")]
+{rag_analysis.replace("[Answer]", "").replace("[Sources]", "\nBased on:").strip()}"""
+            else:
+                # No information found, use response as-is
+                content = rag_analysis
+                
+            return {
+                "messages": [AIMessage(content=content)]
             }
     
     # Case 2: Coming from Research graph
@@ -198,7 +201,7 @@ def create_graph() -> Any:
     memory = None
     if SQLITE_AVAILABLE:
         try:
-            conn = aiosqlite.connect(db_path)
+            conn = aiosqlite.connect(env.state_db_path)
             memory = AsyncSqliteSaver(conn)
         except Exception as e:
             print(f"Warning: Could not initialize SQLite persistence: {e}")

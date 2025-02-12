@@ -1,7 +1,5 @@
 """RAG agent graph definition."""
-from typing import Any, List
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 import re
 
@@ -19,32 +17,17 @@ from agents.rag.schemas import (
     RAGResponse
 )
 from utils.file_utils import read_file
+from agents.config import get_model
+from utils import format_conversation_history, get_recent_messages
 
-
-# Initialize model
-model = ChatOpenAI(
-    model="gpt-4o",
-    temperature=0.7,
-    streaming=True
-)
-
-# Utility function
-
-def format_conversation_history(messages: List[Any]) -> str:
-    """Format conversation history for context."""
-    formatted_messages = []
-    for msg in messages:
-        prefix = 'USER' if isinstance(msg, HumanMessage) else 'ASSISTANT'
-        clean_content = re.sub(r'\n+', '\n', msg.content.strip())
-        formatted_messages.append(f"{prefix}: {clean_content}")
-    return "\n".join(formatted_messages)
+# Initialize model using shared configuration
+model = get_model()
 
 # Nodes
-
 async def optimize_query_node(state: RAGState) -> RAGState:
     """Node to optimize query for semantic search."""
-    message = state["messages"][-1].content if state.get("messages") else ""
-    if not message:
+    messages = state.get("messages", [])
+    if not messages:
         return RAGState(
             optimized_query="",
             original_query="",
@@ -53,14 +36,14 @@ async def optimize_query_node(state: RAGState) -> RAGState:
     
     response = await model.with_structured_output(OptimizedQuery).ainvoke([
         SystemMessage(content=QUERY_OPTIMIZATION_PROMPT.format(
-            context=format_conversation_history(state["messages"][-3:])
+            context=format_conversation_history(get_recent_messages(messages, exclude_last=True))
         )),
-        HumanMessage(content=f"Optimize this query for semantic search: {message}")
+        HumanMessage(content=f"Optimize this query for semantic search: {messages[-1].content}")
     ])
     
     return RAGState(
         optimized_query=response.query,
-        original_query=message,
+        original_query=messages[-1].content,
         next="retrieve"
     )
 
@@ -209,7 +192,7 @@ async def answer_query_node(state: RAGState) -> RAGOutputState:
         )
     )
 
-# Conditional START edge
+# Conditional edge
 async def is_document_processing(state: RAGState) -> str:
     """Determine if this is a document processing request using semantic understanding."""
     messages = state["messages"]
@@ -240,7 +223,7 @@ def create_rag_graph() -> StateGraph:
     workflow.add_node("analyze_context", analyze_context_node)
     workflow.add_node("answer_query", answer_query_node)
     
-    # Conditional START edge - now using async function
+    # Conditional START edge 
     workflow.add_conditional_edges(
         START,
         is_document_processing,

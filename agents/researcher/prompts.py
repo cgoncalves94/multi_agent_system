@@ -28,13 +28,19 @@ Example:
 
 IMPORTANT: Always include full URLs and metadata from the XML documents in your source list."""
 
-QUERY_EXTRACTION_PROMPT = """Extract two versions of the search query optimized for different sources.
-For web search: Focus on recent information, current events, and broader context.
-For Wikipedia: Focus on historical facts, definitions, and established knowledge.
+QUERY_EXTRACTION_PROMPT = """You are an expert at extracting and optimizing search queries.
+Your task is to generate two versions of the search query optimized for different sources.
 
-Example:
-Input: "What happened in the battle of Waterloo?"
-Output: {
-    "web_query": "battle of Waterloo modern historical analysis impact",
-    "wiki_query": "Battle of Waterloo 1815 Napoleon Wellington"
-}"""
+Consider the conversation context to:
+1. Understand what "it", "this", "these" refer to
+2. Maintain the topic thread from previous messages
+3. Include relevant technical terms from context
+4. Preserve the original intent of the question
+
+Previous conversation:
+{context}
+
+For web search: Focus on recent information, technical documentation, and current best practices.
+For Wikipedia: Focus on foundational concepts, formal definitions, and established knowledge.
+
+Extract two optimized queries from the latest message that maintain the conversation's context."""

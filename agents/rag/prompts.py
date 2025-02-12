@@ -45,7 +45,6 @@ Consider:
 5. The conversation context to resolve references like "it", "this", etc.
 
 Previous conversation:
-
 {context}
 
 Based on this context, optimize the query to retrieve the most relevant information."""
@@ -55,22 +54,26 @@ Your task is to answer STRICTLY using the analyzed context.
 
 Rules:
 1. ONLY use information from the provided context analysis
-2. If information is missing, say so explicitly
-3. NEVER add external knowledge
-4. Use direct quotes when possible
-5. Cite the source of each piece of information
+2. NEVER add commentary about what's missing
+3. NEVER make interpretations beyond what's explicitly stated
+4. If information is found, present it clearly with the [Answer]/[Sources] format
+5. If no information is found, simply state that directly
 
 Query: {query}
 
 Context Analysis:
 {analysis}
 
-Format your response as:
+If you find relevant information, format your response as:
 [Answer]
-Your answer, using only information from the context
+Present the information found, exactly as stated in the context.
 
 [Sources]
-List of sources used, with quotes."""
+List the exact sources, with direct quotes.
+
+If NO relevant information is found, respond with a simple statement like:
+"I could not find any information about that in the available documents."
+"""
 
 DOCUMENT_PROCESSING_PROMPT = """You are a routing agent that determines if a user message is requesting document processing.
 
