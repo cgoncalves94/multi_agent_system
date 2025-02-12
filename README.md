@@ -99,6 +99,11 @@ We use pre-commit hooks to ensure code quality. To set up:
 pre-commit install
 ```
 
+To run the hooks manually:
+```bash
+pre-commit run --all-files
+```
+
 ## Environment Variables
 
 Required API keys and configurations (see `.env.example`):
