@@ -80,10 +80,12 @@ You can now ask questions about this document!""")]
             }
         
         if source == "answer_query" and (rag_analysis := rag_response.get("rag_analysis")):
+            # Clean up the response by removing placeholders and making it more conversational
+            cleaned_response = rag_analysis.replace("[Answer]", "").replace("[Sources]", "\nBased on:").strip()
             return {
                 "messages": [AIMessage(content=f"""Here's what I found in the document:
 
-{rag_analysis}""")]
+{cleaned_response}""")]
             }
     
     # Case 2: Coming from Research graph

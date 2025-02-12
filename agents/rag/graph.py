@@ -8,15 +8,17 @@ import re
 from agents.rag.prompts import (
     QUERY_OPTIMIZATION_PROMPT,
     CONTEXT_ANALYSIS_PROMPT,
-    ANSWER_GENERATION_PROMPT
+    ANSWER_GENERATION_PROMPT,
+    DOCUMENT_PROCESSING_PROMPT
 )
-from agents.rag.tools import process_document, retrieve_context, read_file
+from agents.rag.tools import ingest_document, retrieve_context
 from agents.rag.schemas import (
     RAGState, 
     RAGOutputState,
     OptimizedQuery,
     RAGResponse
 )
+from utils.file_utils import read_file
 
 
 # Initialize model
@@ -105,7 +107,7 @@ async def analyze_context_node(state: RAGState) -> RAGState:
     )
 
 async def process_document_node(state: RAGState) -> RAGOutputState:
-    """Node for processing and storing documents."""
+    """Node for ingesting and indexing documents."""
     messages = state["messages"]
     if not messages:
         return RAGOutputState(
@@ -118,28 +120,40 @@ async def process_document_node(state: RAGState) -> RAGOutputState:
     
     last_message = messages[-1].content
     
-    # Check if it's a file path
-    if "data/test_docs/" in last_message:
-        # Extract file path
-        file_path = last_message.split("data/test_docs/")[1].split()[0]
-        document = await read_file(file_path)
-    else:
-        # Treat message content as direct document
-        document = {
-            "content": last_message,
-            "metadata": {"type": "inline", "source": "chat"}
-        }
+    # Extract potential file name from message
+    file_pattern = r'[\w-]+\.(md|txt|py|json|yaml|yml)' 
+    file_match = re.search(file_pattern, last_message)
     
-    if document.get("error"):
-        return RAGOutputState(
-            rag_response=RAGResponse(
-                document_status={"error": document["error"]},
-                rag_analysis=None,
-                source="process_document"
+    if file_match:
+        # Found a file reference
+        file_name = file_match.group(0)
+        document = await read_file(file_name)
+        
+        if document.get("error"):
+            return RAGOutputState(
+                rag_response=RAGResponse(
+                    document_status={"error": f"Could not read file {file_name}: {document['error']}"},
+                    rag_analysis=None,
+                    source="process_document"
+                )
             )
-        )
+    else:
+        # Check if it's a direct content submission
+        if any(marker in last_message.lower() for marker in ["here's the content", "here is the content", "process this content", "index this:"]):
+            document = {
+                "content": last_message,
+                "metadata": {"type": "inline", "source": "chat"}
+            }
+        else:
+            return RAGOutputState(
+                rag_response=RAGResponse(
+                    document_status={"error": "No valid file or content found to process"},
+                    rag_analysis=None,
+                    source="process_document"
+                )
+            )
     
-    result = await process_document.ainvoke({
+    result = await ingest_document.ainvoke({
         "content": document["content"],
         "metadata": document.get("metadata")
     })
@@ -195,22 +209,26 @@ async def answer_query_node(state: RAGState) -> RAGOutputState:
         )
     )
 
-# Conditional edges
-def is_document_processing(state: RAGState) -> str:
-    """Determine if this is a document processing request."""
+# Conditional START edge
+async def is_document_processing(state: RAGState) -> str:
+    """Determine if this is a document processing request using semantic understanding."""
     messages = state["messages"]
     if not messages:
         return "retrieve_and_analyze"
         
     last_message = messages[-1].content
     
-    # Check if it's a document processing request
-    if "data/test_docs/" in last_message or "process this:" in last_message.lower():
-        return "process_document"
-    return "retrieve_and_analyze"
+    # Use LLM to determine if this is a document processing request
+    response = await model.ainvoke([
+        SystemMessage(content=DOCUMENT_PROCESSING_PROMPT.format(message=last_message))
+    ])
+    
+    # Response will be "true" or "false"
+    is_processing = response.content.strip().lower() == "true"
+    
+    return "process_document" if is_processing else "retrieve_and_analyze"
 
-# Create the RAG sub-grap
-
+# Create the RAG sub-graph
 def create_rag_graph() -> StateGraph:
     """Create the RAG sub-graph without compiling."""
     workflow = StateGraph(RAGState, output=RAGOutputState)
@@ -222,7 +240,7 @@ def create_rag_graph() -> StateGraph:
     workflow.add_node("analyze_context", analyze_context_node)
     workflow.add_node("answer_query", answer_query_node)
     
-    # Conditional START edge
+    # Conditional START edge - now using async function
     workflow.add_conditional_edges(
         START,
         is_document_processing,

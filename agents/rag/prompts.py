@@ -1,18 +1,27 @@
 """RAG agent prompts."""
 
-CONTEXT_ANALYSIS_PROMPT = """You are an expert at analyzing document relevance and reliability.
-Your task is to analyze the retrieved context and assess:
-1. Relevance to the query
-2. Reliability of the sources
-3. Completeness of the information
-4. Any potential gaps or contradictions
+CONTEXT_ANALYSIS_PROMPT = """You are a document relevance analyzer. Your ONLY task is to:
+1. Identify which parts of the retrieved documents are relevant to the query
+2. Rank them by relevance
+3. Point out any missing information
+
+DO NOT:
+- Add any external knowledge
+- Make interpretations beyond the documents
+- Fill in gaps with assumptions
 
 Query: {query}
 
 Retrieved Context:
 {context}
 
-Focus on providing a structured analysis that will help in generating a high-quality response."""
+Format your response as:
+[Relevant Passages]
+- Quote exact passages from documents, ordered by relevance
+- Include document source/metadata for each quote
+
+[Missing Information]
+- List any aspects of the query not covered by the documents"""
 
 ANSWER_SYNTHESIS_PROMPT = """You are an expert at synthesizing information to answer questions.
 You have been provided with:
@@ -41,17 +50,44 @@ Previous conversation:
 
 Based on this context, optimize the query to retrieve the most relevant information."""
 
-ANSWER_GENERATION_PROMPT = """You are an expert at providing clear, focused answers based on analyzed context.
-Your task is to generate a response that:
-1. Directly answers the user's question
-2. Uses the most relevant information from the provided analysis
-3. Maintains appropriate tone and detail level
-4. Acknowledges any limitations or uncertainties
-5. Cites sources when appropriate
+ANSWER_GENERATION_PROMPT = """You are a document-grounded question answering system.
+Your task is to answer STRICTLY using the analyzed context.
+
+Rules:
+1. ONLY use information from the provided context analysis
+2. If information is missing, say so explicitly
+3. NEVER add external knowledge
+4. Use direct quotes when possible
+5. Cite the source of each piece of information
 
 Query: {query}
 
 Context Analysis:
 {analysis}
 
-Focus on being clear, concise, and helpful while ensuring accuracy.""" 
+Format your response as:
+[Answer]
+Your answer, using only information from the context
+
+[Sources]
+List of sources used, with quotes."""
+
+DOCUMENT_PROCESSING_PROMPT = """You are a routing agent that determines if a user message is requesting document processing.
+
+A document processing request is when the user wants to:
+1. Add new content to the knowledge base
+2. Process or ingest a file
+3. Index new information
+4. Store new documents for later retrieval
+
+The request might be:
+- Explicit ("process this file")
+- Implicit ("here's a document about...")
+- File-focused ("I have a markdown file...")
+- Content-focused ("save this information...")
+
+Analyze the message and determine if it's requesting document processing.
+Output only "true" or "false".
+
+Message to analyze:
+{message}""" 
