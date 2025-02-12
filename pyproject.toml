@@ -1,0 +1,34 @@
+[project]
+name = "multi-agent"
+version = "0.1.0"
+description = "Multi-agent system for research and RAG"
+requires-python = ">=3.11"
+authors = [
+    {name = "Cesar Goncalves", email = "goncalves.cesaraugusto94@gmail.com"},
+]
+dependencies = [
+    "langchain",
+    "langchain-openai",
+    "langchain-community",
+    "langgraph-checkpoint-sqlite",
+    "langgraph",
+    "aiosqlite",
+    "tavily-python",
+    "wikipedia",
+    "pydantic",
+    "python-dotenv",
+    "langchain-chroma",
+    "rich"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["agents"]  # Explicitly define packages
+package-dir = {"" = "."}  # Root directory for packages
+
+# Exclude data directory from package
+[tool.setuptools.exclude-package-data]
+"*" = ["data/*"] 
