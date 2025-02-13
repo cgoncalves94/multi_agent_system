@@ -1,6 +1,6 @@
 # Multi-Agent System
 
-A sophisticated multi-agent system implementing RAG (Retrieval-Augmented Generation) and Research capabilities using LangChain and LangGraph.
+A Multi-agent system implementing RAG (Retrieval-Augmented Generation) and Research capabilities using LangGraph.
 
 ## Features (WIP)
 
@@ -12,6 +12,42 @@ A sophisticated multi-agent system implementing RAG (Retrieval-Augmented Generat
 - 💾 Vector store integration for efficient document retrieval
 - 🔄 Automatic conversation summarization
 - 🎯 Smart query routing and optimization
+
+## Architecture
+
+![Multi-Agent System Architecture](docs/images/architecture.png)
+
+The system consists of three main processing paths orchestrated by a central router:
+
+1. **Router**: Intelligent component that analyzes incoming queries and directs them to the most appropriate path:
+   - Complex document-based queries → RAG
+   - Research-requiring queries → Research
+   - Simple/direct queries → Quick Answer
+
+2. **RAG (Retrieval-Augmented Generation)**:
+   - Handles document-based queries through two main paths:
+     - Document Processing: Direct processing of input documents
+     - Retrieval Path: Query optimization → Retrieval → Context Analysis → Answer Generation
+   - Provides context-aware responses using the document knowledge base
+
+3. **Research**:
+   - Parallel search architecture combining web and wiki sources
+   - Query extraction and optimization
+   - Result synthesis and combination
+   - Comprehensive information gathering and analysis
+
+4. **Quick Answer**:
+   - Direct path for simple queries that don't require document retrieval or research
+   - Efficient handling of straightforward questions
+   - Leverages model's base knowledge
+
+The system features intelligent flow control:
+- All paths converge at a synthesis step for unified response generation
+- Automatic summarization triggers when conversation length exceeds 5 messages
+- Smart end-state handling based on:
+  - Query complexity
+  - Conversation length
+  - Processing requirements
 
 ## Quick Start
 
