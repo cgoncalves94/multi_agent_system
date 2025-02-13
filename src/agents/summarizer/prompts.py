@@ -38,7 +38,7 @@ Consider:
 - Typical LLM context window limitations
 
 Document preview (first 500 chars):
-{document_preview}
+"{document_preview}..."
 
 Document metadata:
 {metadata}

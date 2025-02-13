@@ -3,6 +3,7 @@
 import os
 from typing import Dict, Any, List
 import tiktoken
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Initialize tokenizer once
 _tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -21,7 +22,13 @@ async def count_tokens(text: str) -> int:
 
 
 async def create_chunks(text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
-    """Split text into chunks based on token count.
+    """Split text into chunks using RecursiveCharacterTextSplitter with token counting.
+
+    This function uses a hybrid approach that:
+    - Uses exact token counting for size control
+    - Respects sentence and paragraph boundaries
+    - Maintains semantic coherence
+    - Handles markdown and code blocks appropriately
 
     Args:
         text: Text to split into chunks
@@ -31,37 +38,18 @@ async def create_chunks(text: str, chunk_size: int, chunk_overlap: int) -> List[
     Returns:
         List of text chunks
     """
-    chunks = []
-    current_chunk = []
-    current_length = 0
+    # Initialize the recursive splitter with token counting
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=lambda x: len(_tokenizer.encode(x)),
+        separators=["\n\n", "\n", ".", "!", "?", " ", ""],  # Ordered by priority
+        keep_separator=True,  # Keep the separator with the chunk
+        is_separator_regex=False,  # Treat separators as literal strings
+    )
 
-    # Split into sentences (simple approach)
-    sentences = text.split(". ")
-
-    for sentence in sentences:
-        sentence = sentence.strip() + "."
-        sentence_length = len(_tokenizer.encode(sentence))
-
-        if current_length + sentence_length > chunk_size:
-            # Save current chunk
-            if current_chunk:
-                chunks.append(" ".join(current_chunk))
-            # Start new chunk with overlap
-            if chunks:
-                # Get last few sentences from previous chunk
-                overlap_sentences = current_chunk[-2:]  # Adjust based on overlap needs
-                current_chunk = overlap_sentences + [sentence]
-                current_length = sum(len(_tokenizer.encode(s)) for s in current_chunk)
-            else:
-                current_chunk = [sentence]
-                current_length = sentence_length
-        else:
-            current_chunk.append(sentence)
-            current_length += sentence_length
-
-    # Add the last chunk if it exists
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
+    # Split the text
+    chunks = text_splitter.split_text(text)
 
     return chunks
 
