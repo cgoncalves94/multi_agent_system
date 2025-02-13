@@ -98,7 +98,8 @@ multi_agent_system/
 │   ├── agents/                         # Agent implementations
 │   │   ├── orchestrator/               # Main orchestration logic
 │   │   ├── rag/                        # RAG agent for document Q&A
-│   │   └── researcher/                 # Research agent for web search
+│   │   ├── researcher/                 # Research agent for web search
+│   │   └── summarizer/                 # Summarizer agent for document processing
 │   ├── utils/                          # Shared utilities
 │   └── config.py                       # System configuration
 │
