@@ -13,6 +13,7 @@ class AgentState(MessagesState):
         None  # Complete research response with source
     )
     rag_response: Optional[Dict[str, Any]] = None  # Complete RAG response with source
+    summarizer_response: Optional[Dict[str, Any]] = None  # Complete summarizer response
     routing_decision: Optional[str] = None  # Router's decision for next step
 
 

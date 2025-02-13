@@ -72,8 +72,7 @@ Present the information found, exactly as stated in the context.
 [Sources]
 List the exact sources, with direct quotes.
 
-If NO relevant information is found, respond with a simple statement like:
-"I could not find any information about that in the available documents."
+If NO relevant information is found, respond with a simple statement that you could not find any information about that in the available documents.
 """
 
 DOCUMENT_PROCESSING_PROMPT = """You are a routing agent that determines if a user message is requesting document processing.

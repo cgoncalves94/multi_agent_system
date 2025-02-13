@@ -19,6 +19,7 @@ from src.agents.orchestrator.schemas import (
 )
 from src.agents.researcher.graph import create_research_graph
 from src.agents.rag.graph import create_rag_graph
+from src.agents.summarizer.graph import create_summarizer_graph
 from src.agents.orchestrator.prompts import ROUTER_SYSTEM_PROMPT, ANSWER_PROMPT
 from src.config import get_model, env
 
@@ -130,6 +131,40 @@ You can now ask questions about this document!"""
                 ]
             }
 
+    # Case 3: Coming from Summarizer graph
+    if route == "SUMMARIZE" and (summarizer_output := state.get("summarizer_response")):
+        # Handle both dictionary and direct Pydantic model cases
+        try:
+            if isinstance(summarizer_output, dict):
+                response = summarizer_output.get("summarizer_response")
+            else:
+                response = summarizer_output
+
+            if not response:
+                raise ValueError("No valid summarizer response found")
+
+            return {
+                "messages": [
+                    AIMessage(
+                        content=f"""Here's the summary I generated:
+
+{response.final_summary}
+
+Document Statistics:
+- Number of chunks processed: {response.num_chunks}"""
+                    )
+                ]
+            }
+        except Exception as e:
+            print(f"Error processing summarizer response: {e}")
+            return {
+                "messages": [
+                    AIMessage(
+                        content="I encountered an error while processing the summary."
+                    )
+                ]
+            }
+
     # Fallback for unexpected state
     return {
         "messages": [
@@ -168,7 +203,12 @@ async def route_message(state: AgentState) -> RouterReturn:
     )
 
     # Map to valid next steps, defaulting to research
-    route_mapping = {"ANSWER": "answer", "RESEARCH": "research", "RAG": "rag"}
+    route_mapping = {
+        "ANSWER": "answer",
+        "RESEARCH": "research",
+        "RAG": "rag",
+        "SUMMARIZE": "doc_summarize",
+    }
 
     return {
         "routing_decision": response.content,  # Store full routing decision separately
@@ -210,9 +250,20 @@ def route_condition(state: AgentState) -> str:
         route = (
             routing_decision.split("[Selected Route]")[1].split("\n")[1].strip().upper()
         )
-        route_mapping = {"ANSWER": "answer", "RESEARCH": "research", "RAG": "rag"}
+
+        # Special handling for summarize route
+        if route == "SUMMARIZE":
+            # Always route to doc_summarize - it can handle both direct text and previous content
+            return "doc_summarize"
+
+        route_mapping = {
+            "ANSWER": "answer",
+            "RESEARCH": "research",
+            "RAG": "rag",
+            "SUMMARIZE": "doc_summarize",
+        }
         return route_mapping.get(route, "research")
-    except (IndexError, AttributeError):  # Specific exceptions instead of bare except
+    except (IndexError, AttributeError):
         return "research"
 
 
@@ -255,36 +306,44 @@ def create_graph() -> Any:
         except Exception as e:
             print(f"Warning: Could not initialize SQLite persistence: {e}")
 
-    # Create the main workflow graph
+    # Initialize the graph
     workflow = StateGraph(AgentState)
 
     # Create and compile sub-graphs
     research_graph = create_research_graph().compile()
     rag_graph = create_rag_graph().compile()
+    summarizer_graph = create_summarizer_graph().compile()
 
     # Add all nodes
     workflow.add_node("router", route_message)
     workflow.add_node("answer", answer)
     workflow.add_node("research", research_graph)
     workflow.add_node("rag", rag_graph)
-    workflow.add_node("summarize", summarize_conversation)
+    workflow.add_node("summarize", summarize_conversation)  # Chat history summarizer
+    workflow.add_node("doc_summarize", summarizer_graph)  # Document summarizer
     workflow.add_node("synthesize", synthesize_node)
 
-    # Start directly with router (no summarize check at start)
+    # Start directly with router
     workflow.add_edge(START, "router")
 
     # Normal routing paths
     workflow.add_conditional_edges(
         "router",
         route_condition,
-        {"answer": "answer", "research": "research", "rag": "rag"},
+        {
+            "answer": "answer",
+            "research": "research",
+            "rag": "rag",
+            "doc_summarize": "doc_summarize",  # Fixed route name to match condition
+        },
     )
 
     # Research and RAG synthesis
     workflow.add_edge("research", "synthesize")
     workflow.add_edge("rag", "synthesize")
+    workflow.add_edge("doc_summarize", "synthesize")  # Document summarizer output
 
-    # Check for summarization only after responses
+    # Check for chat history summarization after responses
     workflow.add_conditional_edges(
         "synthesize", should_summarize, {True: "summarize", False: END}
     )
@@ -292,7 +351,7 @@ def create_graph() -> Any:
         "answer", should_summarize, {True: "summarize", False: END}
     )
 
-    # After summarization, end turn
+    # After chat history summarization, end turn
     workflow.add_edge("summarize", END)
 
     return workflow.compile(checkpointer=memory)

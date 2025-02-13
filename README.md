@@ -7,6 +7,7 @@ A Multi-agent system implementing RAG (Retrieval-Augmented Generation) and Resea
 - 🤖 Multiple specialized agents working together
 - 📚 RAG Agent for document retrieval and context-aware responses
 - 🔍 Research Agent for gathering and synthesizing information
+- 📝 Summarizer Agent for document processing and analysis
 - 🧠 Conversation management with context retention
 - 🌐 Graph-based agent orchestration using LangGraph
 - 💾 Vector store integration for efficient document retrieval
@@ -17,11 +18,12 @@ A Multi-agent system implementing RAG (Retrieval-Augmented Generation) and Resea
 
 ![Multi-Agent System Architecture](docs/images/architecture.png)
 
-The system consists of three main processing paths orchestrated by a central router:
+The system consists of four main processing paths orchestrated by a central router:
 
 1. **Router**: Intelligent component that analyzes incoming queries and directs them to the most appropriate path:
    - Complex document-based queries → RAG
    - Research-requiring queries → Research
+   - Summarization requests → Summarizer
    - Simple/direct queries → Quick Answer
 
 2. **RAG (Retrieval-Augmented Generation)**:
@@ -36,7 +38,13 @@ The system consists of three main processing paths orchestrated by a central rou
    - Result synthesis and combination
    - Comprehensive information gathering and analysis
 
-4. **Quick Answer**:
+4. **Summarizer**:
+   - Map-reduce approach for efficient document processing
+   - Smart chunking with LLM-powered size optimization
+   - Parallel chunk processing and summarization
+   - Intelligent summary synthesis and combination
+
+5. **Quick Answer**:
    - Direct path for simple queries that don't require document retrieval or research
    - Efficient handling of straightforward questions
    - Leverages model's base knowledge
@@ -108,6 +116,7 @@ multi_agent_system/
 - **Orchestrator Agent**: Routes queries and manages agent interactions
 - **RAG Agent**: Handles document retrieval and question answering
 - **Research Agent**: Performs web research and information synthesis
+- **Summarizer Agent**: Processes and summarizes documents
 - **Utils**: Shared tools for file operations and message handling
 
 ## Development Setup

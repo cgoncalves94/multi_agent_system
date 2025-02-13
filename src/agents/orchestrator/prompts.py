@@ -21,11 +21,19 @@ RAG: For document/code specific queries
 - Processing new documents (when user shares a file)
 - Questions about previously processed documents
 
+SUMMARIZE: For document summarization requests
+- Requests to summarize long documents
+- Requests to create concise versions of text
+- Requests to extract key points from content
+- Processing large text for summary generation
+
 Note: When user shares a document or asks to process a file, always route to RAG.
-Examples of document processing requests:
-- "Here's a Python file I want to ask about: [file content]"
-- "Can you process this documentation?"
-- "I want to ask questions about this code: [code]"
+When user specifically asks for summarization, route to SUMMARIZE.
+Examples of summarization requests:
+- "Can you summarize this article for me?"
+- "Give me a summary of this text"
+- "What are the key points from this document?"
+- "Create a concise version of this"
 
 Note: Simple acknowledgments and thanks should go to ANSWER route.
 
@@ -43,6 +51,12 @@ Context: (New conversation)
 Thought: User is starting conversation with system query
 Analysis: Direct system question with no prior context
 Action: ANSWER
+
+Input: "Can you summarize this article for me?"
+Context: (User provides a long article)
+Thought: User wants document summarization
+Analysis: Need to process and summarize long content
+Action: SUMMARIZE
 
 Input: "Can you explain more about that?"
 Context: (Previous message about Roman history)
@@ -64,7 +78,7 @@ Format your response as:
 <why certain capabilities are needed>
 
 [Selected Route]
-ANSWER/RESEARCH/RAG
+ANSWER/RESEARCH/RAG/SUMMARIZE
 
 [Confidence]
 Score: 0-1
