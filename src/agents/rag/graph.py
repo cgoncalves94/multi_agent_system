@@ -3,6 +3,7 @@
 from langchain_core.messages import SystemMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 import re
+from datetime import datetime, UTC
 
 from src.agents.rag.prompts import (
     QUERY_OPTIMIZATION_PROMPT,
@@ -101,15 +102,18 @@ async def process_document_node(state: RAGState) -> RAGOutputState:
 
     last_message = messages[-1].content
 
-    # Extract potential file name from message
+    # Get previous message if available (it might contain the actual content)
+    previous_messages = state.get("messages", [])[:-1]
+    previous_message = previous_messages[-1].content if previous_messages else None
+
+    # First check for file references
     file_pattern = r"[\w-]+\.(md|txt|py|json|yaml|yml)"
     file_match = re.search(file_pattern, last_message)
 
     if file_match:
-        # Found a file reference
+        # Handle file processing
         file_name = file_match.group(0)
         document = await read_file(file_name)
-
         if document.get("error"):
             return RAGOutputState(
                 rag_response=RAGResponse(
@@ -121,19 +125,33 @@ async def process_document_node(state: RAGState) -> RAGOutputState:
                 )
             )
     else:
-        # Check if it's a direct content submission
-        if any(
-            marker in last_message.lower()
-            for marker in [
-                "here's the content",
-                "here is the content",
-                "process this content",
-                "index this:",
+        # Use LLM to determine if this is a request to process the previous message
+        process_check = await model.ainvoke(
+            [
+                SystemMessage(
+                    content="""Determine if this message is requesting to process or save the previous message/content into a database.
+Return 'true' only if the message clearly indicates an intent to process, save, or store previous content.
+Consider phrases like 'process this', 'save this', 'store this', etc.
+Return 'false' otherwise."""
+                ),
+                HumanMessage(content=last_message),
             ]
-        ):
+        )
+
+        should_process = process_check.content.strip().lower() == "true"
+
+        if should_process and previous_message:
+            # Create document from previous message with current timestamp
+            current_time = datetime.now(UTC).isoformat()
             document = {
-                "content": last_message,
-                "metadata": {"type": "inline", "source": "chat"},
+                "content": previous_message,
+                "metadata": {
+                    "type": "inline",
+                    "source": "research_results"
+                    if "research" in previous_message.lower()
+                    else "chat",
+                    "timestamp": current_time,
+                },
             }
         else:
             return RAGOutputState(

@@ -91,12 +91,16 @@ async def synthesize_node(state: AgentState) -> SynthesisReturn:
         if source == "process_document" and (
             document_status := rag_response.get("document_status")
         ):
+            # Get metadata safely with defaults
+            metadata = document_status.get("metadata", {})
+            num_chunks = document_status.get("num_chunks", 0)
+
             return {
                 "messages": [
                     AIMessage(
-                        content=f"""Successfully processed document: {document_status['metadata'].get('source', 'document')}
-- Number of chunks: {document_status['num_chunks']}
-- Document type: {document_status['metadata'].get('type', 'unknown')}
+                        content=f"""Successfully processed document: {metadata.get('source', 'document')}
+- Number of chunks: {num_chunks}
+- Document type: {metadata.get('type', 'unknown')}
 
 You can now ask questions about this document!"""
                     )

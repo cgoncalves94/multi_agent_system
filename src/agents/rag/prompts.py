@@ -82,12 +82,19 @@ A document processing request is when the user wants to:
 2. Process or ingest a file
 3. Index new information
 4. Store new documents for later retrieval
+5. Process or save previously provided content/research
 
 The request might be:
-- Explicit ("process this file")
-- Implicit ("here's a document about...")
+- Explicit ("process this file", "save this research")
+- Implicit ("can you store what I just shared")
 - File-focused ("I have a markdown file...")
 - Content-focused ("save this information...")
+- Reference to previous content ("process the research results", "save what I just shared")
+
+Pay special attention to:
+- Requests that refer to previously shared content
+- Messages asking to process or save earlier research results
+- References to storing or indexing content from previous messages
 
 Analyze the message and determine if it's requesting document processing.
 Output only "true" or "false".
