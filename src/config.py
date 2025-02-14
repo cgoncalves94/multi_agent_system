@@ -83,7 +83,7 @@ env = EnvConfig.load_env()
 
 # Shared model configuration
 def get_model(
-    model_name: str = "gpt-4",
+    model_name: str = "gpt-4o",
     temperature: float = 0.7,
     streaming: bool = True,
     **kwargs,
@@ -91,7 +91,7 @@ def get_model(
     """Get a configured model instance with standard settings.
 
     Args:
-        model_name: Name of the model to use (default: gpt-4)
+        model_name: Name of the model to use (default: gpt-4o)
         temperature: Temperature setting (default: 0.7)
         streaming: Whether to enable streaming (default: True)
         **kwargs: Additional model configuration options
