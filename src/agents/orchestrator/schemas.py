@@ -14,6 +14,9 @@ class AgentState(MessagesState):
     )
     rag_response: Optional[Dict[str, Any]] = None  # Complete RAG response with source
     summarizer_response: Optional[Dict[str, Any]] = None  # Complete summarizer response
+    structured_response: Optional[Dict[str, Any]] = (
+        None  # Structured output from ReAct diagram agent
+    )
     routing_decision: Optional[str] = None  # Router's decision for next step
 
 

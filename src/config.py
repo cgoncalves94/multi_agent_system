@@ -27,26 +27,40 @@ class EnvConfig(BaseModel):
         lambda: os.path.join(os.path.dirname(os.path.dirname(__file__)), "data"),
         description="Base directory for data storage",
     )
-    chroma_path: str = Field(
-        "/deps/multi_agent_system/data/chroma_db",
-        description="Path for Chroma DB storage",
-    )
+
+    @property
+    def chroma_path(self) -> str:
+        """Full path for Chroma DB storage"""
+        return os.path.join(self.data_dir, "chroma_db")
+
+    @property
+    def diagrams_path(self) -> str:
+        """Full path for Mermaid diagrams storage"""
+        return os.path.join(self.data_dir, "diagrams")
 
     @property
     def state_db_path(self) -> str:
-        """Get the path for agent state SQLite database."""
-        return os.path.join(self.data_dir, "state_db", "agent.db")
+        """Full path for state database"""
+        return os.path.join(self.data_dir, "state_db")
 
-    @property
     def ensure_dirs(self) -> None:
         """Ensure all required directories exist."""
-        dirs = [self.data_dir, self.chroma_path, os.path.dirname(self.state_db_path)]
+        dirs = [
+            self.data_dir,
+            self.chroma_path,
+            self.state_db_path,
+            self.diagrams_path,
+        ]
         for dir_path in dirs:
             os.makedirs(dir_path, exist_ok=True)
 
     @classmethod
     def load_env(cls) -> "EnvConfig":
-        """Load and validate environment variables."""
+        """Load configuration from environment variables."""
+        data_dir = os.getenv(
+            "DATA_DIR",
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "data"),
+        )
         config = cls(
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
             tavily_api_key=os.getenv("TAVILY_API_KEY", ""),
@@ -57,16 +71,9 @@ class EnvConfig(BaseModel):
             langchain_tracing_v2=os.getenv("LANGCHAIN_TRACING_V2", "true").lower()
             == "true",
             langchain_project_name=os.getenv("LANGCHAIN_PROJECT", "multi_agent_system"),
-            chroma_path=os.getenv(
-                "CHROMA_PATH", "/deps/multi_agent_system/data/chroma_db"
-            ),
-            data_dir=os.getenv(
-                "DATA_DIR",
-                os.path.join(os.path.dirname(os.path.dirname(__file__)), "data"),
-            ),
+            data_dir=data_dir,
         )
-        # Ensure all directories exist
-        config.ensure_dirs
+        config.ensure_dirs()
         return config
 
 
@@ -76,7 +83,7 @@ env = EnvConfig.load_env()
 
 # Shared model configuration
 def get_model(
-    model_name: str = "gpt-4o",
+    model_name: str = "gpt-4",
     temperature: float = 0.7,
     streaming: bool = True,
     **kwargs,
@@ -84,7 +91,7 @@ def get_model(
     """Get a configured model instance with standard settings.
 
     Args:
-        model_name: Name of the model to use (default: gpt-4o)
+        model_name: Name of the model to use (default: gpt-4)
         temperature: Temperature setting (default: 0.7)
         streaming: Whether to enable streaming (default: True)
         **kwargs: Additional model configuration options

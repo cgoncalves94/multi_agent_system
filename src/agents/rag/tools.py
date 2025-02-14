@@ -14,17 +14,11 @@ embeddings = get_embeddings()
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
-# Use path from environment config
-CHROMA_PATH = env.chroma_path
-
-# Ensure directory exists with proper permissions
-os.makedirs(CHROMA_PATH, exist_ok=True)
-
 # Initialize vector store - Chroma handles database creation and management
 vectorstore = Chroma(
     collection_name="rag_documents",
     embedding_function=embeddings,
-    persist_directory=CHROMA_PATH,
+    persist_directory=env.chroma_path,
 )
 
 

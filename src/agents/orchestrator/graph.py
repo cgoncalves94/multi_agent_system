@@ -20,6 +20,7 @@ from src.agents.orchestrator.schemas import (
 from src.agents.researcher.graph import create_research_graph
 from src.agents.rag.graph import create_rag_graph
 from src.agents.summarizer.graph import create_summarizer_graph
+from src.agents.react.agent import create_diagram_analyzer
 from src.agents.orchestrator.prompts import ROUTER_SYSTEM_PROMPT, ANSWER_PROMPT
 from src.config import get_model, env
 
@@ -74,13 +75,14 @@ async def summarize_conversation(state: AgentState) -> SummaryReturn:
 async def synthesize_node(state: AgentState) -> SynthesisReturn:
     """Node to synthesize final response."""
     # Get the routing decision to know which response to use
-    route = (
-        state.get("routing_decision", "")
-        .split("[Selected Route]")[1]
-        .split("\n")[1]
-        .strip()
-        .upper()
-    )
+    routing_decision = state.get("routing_decision", "")
+
+    try:
+        route = (
+            routing_decision.split("[Selected Route]")[1].split("\n")[1].strip().upper()
+        )
+    except Exception:
+        route = ""
 
     # Case 1: Coming from RAG graph
     if route == "RAG" and (rag_response := state.get("rag_response")):
@@ -131,7 +133,60 @@ You can now ask questions about this document!"""
                 ]
             }
 
-    # Case 3: Coming from Summarizer graph
+    # Case 3: Coming from Diagram Generator
+    if route == "DIAGRAM":
+        # Get structured output
+        structured_output = state.get("structured_response")
+        messages = state["messages"]
+        current_human_idx = None
+
+        # Find the current human message
+        for idx in range(len(messages) - 1, -1, -1):
+            if isinstance(messages[idx], HumanMessage):
+                current_human_idx = idx
+                break
+
+        if current_human_idx is None:
+            return {"messages": [AIMessage(content="No query found to process.")]}
+
+        # Get messages after the human query
+        subsequent_messages = messages[current_human_idx + 1 :]
+        messages_to_delete = [RemoveMessage(id=m.id) for m in subsequent_messages]
+
+        # Check if we have a valid diagram
+        if structured_output and hasattr(structured_output, "diagram"):
+            # Clean up the diagram (remove mermaid wrapper if present)
+            diagram = structured_output.diagram
+            if "```mermaid" in diagram:
+                diagram = diagram.split("```mermaid\n")[1].split("```")[0]
+
+            final_message = AIMessage(
+                content=f"""I've created a visual representation of the components and their relationships.
+
+The Mermaid.js diagram has been generated and saved to: {structured_output.filename}
+
+Here's the diagram content:
+
+{diagram}
+
+You can now ask questions about the diagram!"""
+            )
+            return {"messages": messages_to_delete + [final_message]}
+        else:
+            # No diagram was generated, return a message explaining this
+            final_message = AIMessage(
+                content="""I apologize, but I wasn't able to generate a diagram for this request.
+
+To create a diagram, I need to:
+1. Analyze the content
+2. Create a Mermaid.js diagram using the create_mermaid_diagram tool
+3. Save it using the save_graph tool
+
+Please try rephrasing your request, specifying what kind of diagram you'd like (flowchart, gantt chart, etc.) and what elements should be included."""
+            )
+            return {"messages": messages_to_delete + [final_message]}
+
+    # Case 4: Coming from Summarizer graph
     if route == "SUMMARIZE" and (summarizer_output := state.get("summarizer_response")):
         # Handle both dictionary and direct Pydantic model cases
         try:
@@ -208,6 +263,7 @@ async def route_message(state: AgentState) -> RouterReturn:
         "RESEARCH": "research",
         "RAG": "rag",
         "SUMMARIZE": "doc_summarize",
+        "DIAGRAM": "diagram_analyze",
     }
 
     return {
@@ -261,6 +317,7 @@ def route_condition(state: AgentState) -> str:
             "RESEARCH": "research",
             "RAG": "rag",
             "SUMMARIZE": "doc_summarize",
+            "DIAGRAM": "diagram_analyze",
         }
         return route_mapping.get(route, "research")
     except (IndexError, AttributeError):
@@ -313,6 +370,7 @@ def create_graph() -> Any:
     research_graph = create_research_graph().compile()
     rag_graph = create_rag_graph().compile()
     summarizer_graph = create_summarizer_graph().compile()
+    diagram_generator = create_diagram_analyzer()
 
     # Add all nodes
     workflow.add_node("router", route_message)
@@ -321,6 +379,7 @@ def create_graph() -> Any:
     workflow.add_node("rag", rag_graph)
     workflow.add_node("summarize", summarize_conversation)  # Chat history summarizer
     workflow.add_node("doc_summarize", summarizer_graph)  # Document summarizer
+    workflow.add_node("diagram_analyze", diagram_generator)  # Diagram generation
     workflow.add_node("synthesize", synthesize_node)
 
     # Start directly with router
@@ -334,14 +393,16 @@ def create_graph() -> Any:
             "answer": "answer",
             "research": "research",
             "rag": "rag",
-            "doc_summarize": "doc_summarize",  # Fixed route name to match condition
+            "doc_summarize": "doc_summarize",
+            "diagram_analyze": "diagram_analyze",
         },
     )
 
-    # Research and RAG synthesis
+    # All paths lead to synthesis
     workflow.add_edge("research", "synthesize")
     workflow.add_edge("rag", "synthesize")
-    workflow.add_edge("doc_summarize", "synthesize")  # Document summarizer output
+    workflow.add_edge("doc_summarize", "synthesize")
+    workflow.add_edge("diagram_analyze", "synthesize")
 
     # Check for chat history summarization after responses
     workflow.add_conditional_edges(

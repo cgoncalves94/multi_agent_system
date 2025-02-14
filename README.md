@@ -1,6 +1,6 @@
 # Multi-Agent System
 
-A Multi-agent system implementing RAG (Retrieval-Augmented Generation) and Research capabilities using LangGraph.
+A multi-agent system that uses a combination of RAG, research, summarization, and diagram generation to answer questions.
 
 ## Features (WIP)
 
@@ -8,6 +8,7 @@ A Multi-agent system implementing RAG (Retrieval-Augmented Generation) and Resea
 - 📚 RAG Agent for document retrieval and context-aware responses
 - 🔍 Research Agent for gathering and synthesizing information
 - 📝 Summarizer Agent for document processing and analysis
+- 📊 Diagram Agent for visual representation using Mermaid.js
 - 🧠 Conversation management with context retention
 - 🌐 Graph-based agent orchestration using LangGraph
 - 💾 Vector store integration for efficient document retrieval
@@ -24,6 +25,7 @@ The system consists of four main processing paths orchestrated by a central rout
    - Complex document-based queries → RAG
    - Research-requiring queries → Research
    - Summarization requests → Summarizer
+   - Visualization requests → Diagram
    - Simple/direct queries → Quick Answer
 
 2. **RAG (Retrieval-Augmented Generation)**:
@@ -44,14 +46,21 @@ The system consists of four main processing paths orchestrated by a central rout
    - Parallel chunk processing and summarization
    - Intelligent summary synthesis and combination
 
-5. **Quick Answer**:
+5. **Diagram**:
+   - Uses LangGraph's prebuilt react agent for simplicity and reliability
+   - Creates visual diagrams using Mermaid.js
+   - Supports flowcharts and Gantt charts
+   - Enforces consistent diagram structure and formatting
+   - Saves diagrams for future reference
+
+6. **Quick Answer**:
    - Direct path for simple queries that don't require document retrieval or research
    - Efficient handling of straightforward questions
    - Leverages model's base knowledge
 
 The system features intelligent flow control:
 - All paths converge at a synthesis step for unified response generation
-- Automatic summarization triggers when conversation length exceeds 5 messages
+- Automatic summarization triggers when conversation length exceeds 10 messages
 - Smart end-state handling based on:
   - Query complexity
   - Conversation length
@@ -81,7 +90,7 @@ The system features intelligent flow control:
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
    # Install dependencies from pyproject.toml
-   uv pip install -e ".[dev]"
+   uv pip install -e
    ```
 
 4. Set up your environment variables:
@@ -99,7 +108,8 @@ multi_agent_system/
 │   │   ├── orchestrator/               # Main orchestration logic
 │   │   ├── rag/                        # RAG agent for document Q&A
 │   │   ├── researcher/                 # Research agent for web search
-│   │   └── summarizer/                 # Summarizer agent for document processing
+│   │   ├── summarizer/                 # Summarizer agent for document processing
+│   │   └── react/                      # Diagram agent using prebuilt react agent
 │   ├── utils/                          # Shared utilities
 │   └── config.py                       # System configuration
 │
@@ -112,13 +122,40 @@ multi_agent_system/
 └── uv.lock                             # UV dependency lock file
 ```
 
-### Key Components
+### Key Components & LangGraph Patterns
 
-- **Orchestrator Agent**: Routes queries and manages agent interactions
-- **RAG Agent**: Handles document retrieval and question answering
-- **Research Agent**: Performs web research and information synthesis
-- **Summarizer Agent**: Processes and summarizes documents
-- **Utils**: Shared tools for file operations and message handling
+Each agent demonstrates different LangGraph concepts and patterns:
+
+- **Orchestrator Agent**: Implements supervisor routing architecture with structured outputs
+  - Uses LangGraph's routing capabilities to direct queries
+  - Demonstrates state management across multiple agents
+  - Implements supervisor-based multi-agent coordination
+
+- **RAG Agent**: Showcases tool calling and vector store integration
+  - Implements sophisticated tool calling patterns
+  - Demonstrates RAG pattern with vector database integration
+  - Uses structured outputs for query optimization and context analysis
+
+- **Research Agent**: Demonstrates parallel processing and result synthesis
+  - Uses parallel execution for web and wiki searches
+  - Shows tool calling with multiple external APIs
+  - Implements result combination using LangGraph's state management
+
+- **Summarizer Agent**: Implements map-reduce parallelization
+  - Uses LangGraph's Send API for parallel chunk processing
+  - Demonstrates map-reduce pattern for document processing
+  - Shows efficient state management in parallel operations
+
+- **Diagram Agent**: Shows prebuilt agent integration
+  - Demonstrates using LangGraph's create_react_agent
+  - Shows how to plug prebuilt agents into custom graphs
+  - Implements tool-based ReAct pattern
+
+The system also showcases:
+- Subgraphs for better organization and reusability
+- Persistent state management using SQLite checkpointing
+- Structured outputs across all agents
+- Memory management for conversation context
 
 ## Development Setup
 
@@ -135,7 +172,7 @@ To update dependencies:
 uv pip compile pyproject.toml -o uv.lock
 
 # Install updated dependencies
-uv pip install -e ".[dev]"
+uv pip install -e
 ```
 
 ### Pre-commit Hooks
