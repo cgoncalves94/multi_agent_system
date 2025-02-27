@@ -29,7 +29,7 @@ model = get_model()
 
 # Conditionally import SQLite components
 try:
-    from langgraph.checkpoint.sqlite import AsyncSqliteSaver
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
     SQLITE_AVAILABLE = True
 except ImportError:
