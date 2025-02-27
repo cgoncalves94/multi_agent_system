@@ -70,7 +70,7 @@ The system features intelligent flow control:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/multi_agent_system.git
+   git clone https://github.com/cgoncalves94/multi_agent_system.git
    cd multi_agent_system
    ```
 
