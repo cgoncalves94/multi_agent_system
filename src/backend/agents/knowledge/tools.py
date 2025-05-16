@@ -1,10 +1,8 @@
 """RAG tools for knowledge agent."""
 
-import os
 from typing import Dict, List, Optional
 
 from langchain_chroma import Chroma
-from langchain_core.documents import Document
 from langchain_core.tools import tool
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.tools import TavilySearchResults
@@ -48,31 +46,6 @@ class QueryInput(BaseModel):
     k: int = Field(
         default=5, description="Number of documents to retrieve", ge=1, le=10
     )
-
-
-@tool("ingest_document", args_schema=DocumentInput)
-async def ingest_document(content: str, metadata: Optional[Dict] = None) -> Dict:
-    """Ingest a document into the vector store for later retrieval."""
-    # Split document into chunks
-    chunks = text_splitter.split_text(content)
-
-    # Create Document objects
-    documents = [
-        Document(page_content=chunk, metadata=metadata or {}) for chunk in chunks
-    ]
-
-    # Add documents to vector store
-    try:
-        # Generate unique IDs based on source and chunk number
-        source = metadata.get("source", "unknown") if metadata else "unknown"
-        source_base = os.path.splitext(source)[0]  # Remove extension
-        ids = [f"{source_base}_chunk_{i}" for i in range(len(documents))]
-
-        # Add documents to vector store
-        await vectorstore.aadd_documents(documents=documents, ids=ids)
-        return {"status": "success", "num_chunks": len(chunks), "metadata": metadata}
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
 
 
 @tool("retrieve_context", args_schema=QueryInput)
