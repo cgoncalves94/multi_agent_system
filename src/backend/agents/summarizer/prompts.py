@@ -14,22 +14,6 @@ Text chunk to summarize:
 {chunk}
 """
 
-FINAL_SUMMARY_PROMPT = """You are tasked with creating a coherent final summary from multiple chunk summaries.
-Your goal is to combine these summaries into a clear, well-structured, and comprehensive final summary.
-
-Guidelines:
-- Maintain logical flow and coherence
-- Eliminate redundancy while preserving important details
-- Ensure consistency in tone and style
-- Create clear transitions between ideas
-- Preserve the key insights from all chunks
-
-Individual chunk summaries:
-{chunk_summaries}
-
-Please create a unified, coherent summary that captures the essence of the entire document.
-"""
-
 CHUNK_SIZE_PROMPT = """Analyze the following document and recommend an optimal chunk size for splitting it into manageable pieces.
 Consider:
 - Document length and complexity
