@@ -11,23 +11,32 @@ authors = [
     {name = "Cesar Goncalves", email = "goncalves.cesaraugusto94@gmail.com"},
 ]
 dependencies = [
-    "langchain",
-    "langchain-openai",
-    "langchain-community",
-    "langgraph-checkpoint-sqlite",
-    "langgraph",
-    "aiosqlite",
-    "tavily-python",
-    "wikipedia",
-    "pydantic",
-    "python-dotenv",
-    "langchain-chroma",
-    "rich"
+    "langchain==0.3.25",
+    "langchain-openai==0.3.16",
+    "langgraph==0.4.3",
+    "langchain-core==0.3.59",
+    "langchain-community==0.3.24",
+    "langchain-chroma==0.2.3",
+    "fastapi==0.115.12",
+    "uvicorn==0.34.2",
+    "openai==1.78.1",
+    "chromadb==0.6.3",
+    "pydantic==2.11.4",
+    "pydantic-settings==2.9.1",
+    "tavily-python==0.7.2",
+    "python-dotenv==1.1.0",
+    "pre-commit==4.2.0",
+    "pypdf2==3.0.1",
+    "python-multipart==0.0.20",
+    "rich==14.0.0",
+    "aiofiles==23.2.1"
 ]
+
+
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["agents", "utils"]
+packages = ["backend", "backend.agents", "backend.utils"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.yml"]

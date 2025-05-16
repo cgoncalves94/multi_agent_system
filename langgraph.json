@@ -1,11 +1,10 @@
 {
-  "dockerfile_lines": [],
+  "dependencies": ["."],
   "graphs": {
-    "agent": "./src/agents/orchestrator/graph.py:create_graph"
+    "agent": "./src/backend/agents/orchestrator/graph.py:create_graph"
   },
-  "env": "./.env",
-  "python_version": "3.12",
-  "dependencies": [
-    "."
-  ]
+  "env": "./src/backend/.env",
+  "http": {
+    "app": "./src/backend/app.py:app"
+  }
 }

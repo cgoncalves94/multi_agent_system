@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph Chat</title>
+    <link rel="stylesheet" href="/static/styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <button class="sidebar-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+        </button>
+        <div class="overlay"></div>
+        <div class="sidebar active">
+            <button id="new-chat-btn" class="new-chat-sidebar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Chat
+            </button>
+            <div class="sidebar-section">
+                <h4>Knowledge Base</h4>
+                <p class="kb-description">Upload .txt, .md, or .pdf documents to make them searchable by the assistant.</p>
+                <input type="file" id="document-upload-input" accept=".txt,.md,.pdf">
+                <button id="upload-document-btn" class="button-secondary">Upload Document</button>
+                <div id="upload-status" class="upload-status-message"></div>
+            </div>
+            <div class="delete-all-container">
+                <button class="button-danger">Delete All Conversations</button>
+            </div>
+            <div id="sessions-list">
+                <!-- Time periods and conversations will be added here -->
+            </div>
+        </div>
+
+        <div class="main-content sidebar-active">
+            <div class="container">
+                <div id="error-message"></div>
+                <div id="chat-box" class="chat-box"></div>
+                <div id="staged-document-indicator" class="staged-document-indicator"></div>
+                <div class="input-container">
+                    <label for="message-input"></label><textarea
+                        id="message-input"
+                        placeholder="Send a message or attach a document for summarization..."
+                        rows="1"
+                        onInput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                    ></textarea>
+                    <input type="file" id="summarize-file-input" accept=".txt,.md" style="display: none;">
+                    <button id="attach-summarize-button" class="icon-button" title="Attach document for summarization">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.49"></path>
+                        </svg>
+                    </button>
+                    <button id="send-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/static/js/script.js"></script>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message">Are you sure you want to delete all conversations?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel" class="button button-secondary">Cancel</button>
+                <button id="modal-confirm" class="button button-danger">Delete All</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -4,205 +4,139 @@ This document showcases various examples of how the multi-agent system can be us
 
 ## Individual Agent Examples
 
-### 1. Research Agent
+### 1. Knowledge Agent
 
-**Q: "Research about microservices"**
+**Q: "What information do we have about microservices?"**
 
-The research agent will:
-1. Gather information from multiple credible sources
-2. Evaluate source credibility
-3. Synthesize findings with proper citations
-4. Provide confidence assessments
-
-Example Response:
-```
-Here are the findings from my research:
-
-[Sources]
-- Medium: Best Practices for Microservice Design [Credibility: Medium]
-- Wikipedia: Microservices [Credibility: High]
-(Additional sources...)
-
-[Key Findings]
-1. Design Principles and Trends
-2. Tools and Technologies
-3. Emerging Trends
-...
-
-[Confidence Assessment]
-- Overall Confidence: High
-- Areas of Uncertainty
-- Information Gaps
-```
-
-### 2. RAG (Retrieval-Augmented Generation) Agent
-
-**Q: "Process this research as a document and save in the vector db"**
-
-The RAG agent will:
-1. Process the content into chunks
-2. Add metadata (type, source, timestamp)
-3. Store in the vector database
-4. Confirm successful processing
+The knowledge agent will:
+1. Search internal document database first
+2. If no relevant documents are found, search external sources
+3. Grade and format results with proper citations
+4. Present findings with confidence level
 
 Example Response:
 ```
-Successfully processed document: research_results
-- Number of chunks: 6
-- Document type: inline
+Based on our available knowledge, here's what I found about microservices:
 
-You can now ask questions about this document!
+[Source 1] [Internal - Enterprise Architecture Guide]: Microservices architecture divides applications into loosely coupled services, each responsible for specific business capabilities...
+
+[Source 2] [Web - Martin Fowler's Blog (martinfowler.com)]: The microservice architectural style is an approach to developing a single application as a suite of small services, each running in its own process...
+
+Additional insights:
+- Each microservice runs independently and communicates via APIs
+- Benefits include scalability, resilience, and technology flexibility
+- Challenges include distributed system complexity and data consistency
 ```
 
-**Q: "Search in this document about microservices architecture"**
+### 2. Document Retrieval
 
-The RAG agent will:
-1. Search the vector database
-2. Retrieve relevant passages
-3. Present findings with sources
+**Q: "What do we know about blockchain consensus mechanisms?"**
+
+The knowledge agent will:
+1. Search the vector database for relevant passages
+2. Retrieve and format passages with source information
+3. Present findings in a structured way
 
 Example Response:
 ```
-Here's what I found in the document:
+Here's what I found in our knowledge base about blockchain consensus mechanisms:
 
-1. The microservices architecture is characterized by...
-2. Key components include...
+[Source 1] [Internal - blockchain_research_paper.pdf]: The paper discusses three primary consensus mechanisms: Proof of Work (PoW), Proof of Stake (PoS), and Delegated Proof of Stake (DPoS)...
 
-Based on:
-- Source: knowledge_base, research_results, timestamp: 2025-02-14
+[Source 2] [Internal - blockchain_research_paper.pdf]: Newer consensus mechanisms like Practical Byzantine Fault Tolerance (PBFT) are designed to address the energy consumption issues of PoW...
+
+The document emphasizes that consensus mechanism selection should be based on specific use case requirements, security needs, and scalability concerns.
 ```
 
-### 3. React Agent (Diagram Generation)
-
-**Q: "Create a diagram about the microservices architecture"**
-
-The React agent will:
-1. Analyze the content
-2. Generate a Mermaid.js diagram
-3. Save and display the result
-
-Example Response:
-```
-I've created a visual representation of the components and their relationships.
-
-The Mermaid.js diagram has been generated and saved to: architecture.mmd
-
-Here's the diagram content:
-flowchart TD
-    Component1 --> Component2
-    ...
-
-You can now ask questions about the diagram!
-```
-
-### 4. Summarizer Agent
+### 3. Summarizer Agent
 
 **Q: "Summarize this technical documentation"**
 
 The summarizer agent will:
 1. Process the document in chunks
-2. Generate a concise summary
+2. Generate a concise summary using a map-reduce approach
 3. Maintain key technical details
 
 Example Response:
 ```
-Here's the summary I generated:
+Here's the summary of the technical documentation:
 
 [Summary Content]
-The documentation covers...
+This documentation covers the implementation of a distributed data processing framework with the following key components:
+1. Data ingestion layer supporting batch and stream processing
+2. Computation engine with support for SQL and custom functions
+3. Storage layer with tiered architecture (hot, warm, cold)
+...
 
 Document Statistics:
 - Number of chunks processed: 8
+- Original document length: ~24,000 words
+- Processing time: 12.3 seconds
 ```
 
 ## Combined Workflows
 
-### Research → Process → Visualize Flow
+### Knowledge Search → External Search
 
 This example shows how multiple agents work together:
 
-1. Initial Research Request:
+1. Initial Knowledge Query:
 ```
-Human: Research about microservices
-AI: [Detailed research response with sources and findings]
-```
-
-2. Document Processing:
-```
-Human: Process this research as document
-AI: [Confirmation of document processing with metadata]
+Human: What information do we have about quantum computing?
+AI: I don't have any internal documents about quantum computing. Would you like me to search external sources?
+Human: Yes, please search online.
+AI: [Detailed response with information from online sources]
 ```
 
-3. Information Retrieval:
+2. Follow-up Question:
 ```
-Human: Search in this document about microservices
-AI: [Retrieved relevant information with sources]
-```
-
-4. Visualization:
-```
-Human: Create a diagram about it
-AI: [Generated and saved Mermaid.js diagram]
+Human: Based on that information, what are the main challenges in quantum computing?
+AI: [Response focusing on challenges, citing external sources]
 ```
 
 This workflow demonstrates how the system can:
-- Gather comprehensive research
-- Store information for future retrieval
-- Extract specific insights
-- Create visual representations
+- Check internal knowledge before searching externally
+- Use external search when internal knowledge is insufficient
 - Maintain context throughout the interaction
+- Provide consistently formatted responses with proper citations
 
 ### Research → Summarize Flow
 
 Another common workflow:
 
-1. Research Phase:
+1. Knowledge Gathering Phase:
 ```
-Human: Research about cloud computing trends
-AI: [Detailed research findings]
+Human: Find information about recent developments in renewable energy
+AI: [Detailed findings from external sources]
 ```
 
 2. Summarization:
 ```
-Human: Summarize these findings
-AI: [Concise summary with key points]
+Human: Summarize these findings into a brief report
+AI: [Concise summary with key points, organized by topic]
 ```
 
 ## Best Practices
 
-1. **Start Broad, Then Narrow Down**
-   - Begin with research queries
-   - Process important findings
-   - Ask specific questions about processed content
+1. **Start with Internal Knowledge**
+   - Let the system check its internal knowledge base first
+   - Request external searches only when needed
 
 2. **Leverage Multiple Agents**
-   - Combine research with visualization
-   - Process findings for future reference
-   - Use summaries for long content
+   - Use the knowledge agent for fact-based queries
+   - Use the summarizer for condensing large texts
 
 3. **Maintain Context**
    - Reference previous findings in follow-up questions
-   - Build on processed documents
-   - Create visual representations of complex topics
+   - Use clear, specific questions for better retrieval
 
 ## Tips for Optimal Results
 
-1. **Research Queries**
-   - Be specific about the topic
-   - Mention if you need specific types of sources
-   - Ask for confidence assessments
+1. **Knowledge Queries**
+   - Be specific about what you're looking for
+   - Indicate if you want only internal knowledge or external sources too
+   - Ask for confidence levels or source quality assessment
 
-2. **Document Processing**
-   - Process research results for future reference
-   - Store important findings in the vector database
-   - Use clear markers for content types
-
-3. **Visualization Requests**
-   - Specify diagram type if needed
-   - Ask for specific relationship visualization
-   - Request modifications if needed
-
-4. **Combined Workflows**
-   - Plan your query sequence
-   - Build on previous results
-   - Use processed documents for follow-up questions
+2. **Combined Workflows**
+   - Start broad, then go deeper with follow-up questions
+   - Use summarization for lengthy content or multiple sources

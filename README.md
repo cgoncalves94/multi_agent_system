@@ -1,204 +1,175 @@
 # Multi-Agent System
 
-A multi-agent system that uses a combination of RAG, research, summarization, and diagram generation to answer questions.
+A sophisticated multi-agent system designed to answer questions by leveraging internal knowledge bases, external search, and document summarization - all orchestrated through a modern web interface.
 
-## Features (WIP)
+## Overview
 
-- 🤖 Multiple specialized agents working together
-- 📚 RAG Agent for document retrieval and context-aware responses
-- 🔍 Research Agent for gathering and synthesizing information
-- 📝 Summarizer Agent for document processing and analysis
-- 📊 Diagram Agent for visual representation using Mermaid.js
-- 🧠 Conversation management with context retention
-- 🌐 Graph-based agent orchestration using LangGraph
-- 💾 Vector store integration for efficient document retrieval
-- 🔄 Automatic conversation summarization
-- 🎯 Smart query routing and optimization
+This system employs a suite of specialized agents orchestrated by LangGraph to handle diverse user queries. Key capabilities include:
 
-## Architecture
+-   🤖 **Specialized Agents**: Dedicated agents for knowledge retrieval and summarization, each optimized for their specific tasks.
+-   🎯 **Intelligent Routing**: A central router analyzes incoming queries and directs them to the most suitable agent or processing path.
+-   📚 **Knowledge-First Approach**: Prioritizes searching internal document base before resorting to external searches, providing properly sourced responses.
+-   🔍 **External Search Integration**: Seamlessly transitions to web search when internal knowledge is insufficient, with proper citation of sources.
+-   📝 **Efficient Summarization**: Processes and condenses large documents using a map-reduce approach with LLM-powered chunking.
+-   🌐 **Advanced Orchestration**: Utilizes LangGraph for robust, graph-based agent coordination and conversation flow control.
+-   🧠 **Contextual Conversations**: Maintains conversation history and context, with automatic summarization for longer interactions.
+-   💻 **Web Interface**: Clean, responsive UI for interacting with the multi-agent system.
 
-![Multi-Agent System Architecture](docs/images/architecture.png)
+## System Architecture
 
-The system consists of four main processing paths orchestrated by a central router:
+The system's architecture revolves around a central **Router** that intelligently dispatches queries to one of several specialized processing paths:
 
-1. **Router**: Intelligent component that analyzes incoming queries and directs them to the most appropriate path:
-   - Complex document-based queries → RAG
-   - Research-requiring queries → Research
-   - Summarization requests → Summarizer
-   - Visualization requests → Diagram
-   - Simple/direct queries → Quick Answer
+1.  **Router**: Analyzes incoming queries to determine the optimal path:
+    *   Document-based questions → **Knowledge Agent**
+    *   Requests for document summarization → **Summarizer Agent**
+    *   Simple, direct questions → **Quick Answer Path**
 
-2. **RAG (Retrieval-Augmented Generation)**:
-   - Handles document-based queries through two main paths:
-     - Document Processing: Direct processing of input documents
-     - Retrieval Path: Query optimization → Retrieval → Context Analysis → Answer Generation
-   - Provides context-aware responses using the document knowledge base
+2.  **Knowledge Agent**:
+    *   First searches internal vector database for relevant documents
+    *   Grades retrieved documents for relevance
+    *   Falls back to external search if internal documents are insufficient
+    *   Formats findings with proper source attribution
 
-3. **Research**:
-   - Parallel search architecture combining web and wiki sources
-   - Query extraction and optimization
-   - Result synthesis and combination
-   - Comprehensive information gathering and analysis
+3.  **Summarizer Agent**:
+    *   Efficiently processes large documents using a map-reduce strategy
+    *   Features smart chunking and parallel processing of summaries
+    *   Produces concise summaries that maintain key information
 
-4. **Summarizer**:
-   - Map-reduce approach for efficient document processing
-   - Smart chunking with LLM-powered size optimization
-   - Parallel chunk processing and summarization
-   - Intelligent summary synthesis and combination
+4.  **Quick Answer Path**:
+    *   Provides direct responses for straightforward queries that don't necessitate extensive processing
+    *   Uses the base model's knowledge when external information isn't needed
 
-5. **Diagram**:
-   - Uses LangGraph's prebuilt react agent for simplicity and reliability
-   - Creates visual diagrams using Mermaid.js
-   - Supports flowcharts and Gantt charts
-   - Enforces consistent diagram structure and formatting
-   - Saves diagrams for future reference
+**Intelligent Flow Control**:
+All processing paths converge towards a final synthesis step to generate a unified response. The system incorporates automatic conversation summarization (after 10 messages) and adapts its end-state handling based on query complexity, conversation length, and processing needs.
 
-6. **Quick Answer**:
-   - Direct path for simple queries that don't require document retrieval or research
-   - Efficient handling of straightforward questions
-   - Leverages model's base knowledge
+## LangGraph Implementation Highlights
 
-The system features intelligent flow control:
-- All paths converge at a synthesis step for unified response generation
-- Automatic summarization triggers when conversation length exceeds 10 messages
-- Smart end-state handling based on:
-  - Query complexity
-  - Conversation length
-  - Processing requirements
+Our system demonstrates several key LangGraph concepts and patterns:
 
-## Quick Start
+-   **Multi-Agent Architecture**: Implements a supervisor pattern where the orchestrator routes tasks to specialized agents and manages communication between them.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/cgoncalves94/multi_agent_system.git
-   cd multi_agent_system
-   ```
+-   **Subgraphs**: Each agent is implemented as a self-contained subgraph with its own state schema and flow logic, then compiled and integrated into the main graph.
 
-2. Install uv (recommended for faster, more reliable dependency management):
-   ```bash
-   # On Unix-like systems
-   curl -LsSf https://astral.sh/uv/install.sh | sh
+-   **Conditional Routing**: Uses LangGraph's conditional edges to implement dynamic decision-making based on document relevance, query type, and conversation state.
 
-   # On Windows PowerShell
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-   ```
+-   **Parallel Processing**: The summarizer agent implements map-reduce pattern for parallel document chunk processing to maximize efficiency.
 
-3. Create virtual environment and install dependencies:
-   ```bash
-   # Create and activate virtual environment
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+-   **Streaming**: Implements token-by-token streaming to provide real-time feedback during LLM processing, with support for multiple streaming modes (values, messages, events).
 
-   # Install dependencies from pyproject.toml
-   uv pip install -e
-   ```
+-   **State Management & Persistence**: Uses structured Pydantic models for runtime state validation while leveraging LangGraph Platform's built-in persistence capabilities for maintaining conversation state across sessions without additional infrastructure.
 
-4. Set up your environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
+-   **Message Memory**: Implements conversation summarization after 10 messages to maintain context while managing token limits, with semantic memory search capabilities.
+
+-   **Tool Integration**: Seamlessly integrates external tools (like vector search and web search) with proper error handling and normalization.
+
+-   **Human-in-the-Loop Ready**: Designed with interrupt capabilities for human review of responses, tool calls, and state editing without breaking the execution flow.
+
+-   **LangGraph Platform Benefits**: Takes advantage of the LangGraph Platform API for:
+    * Automatic durable execution with stateful persistence
+    * Efficient background runs for long-running tasks
+    * Elastic scaling for handling traffic bursts
+    * Built-in monitoring and observability
+    * Thread management for multi-user conversations
+
+**System-Wide Patterns**:
+-   **Subgraphs**: Organizes complex logic into reusable subgraphs with well-defined interfaces
+-   **Structured Outputs**: Enforces consistent data formats across all agents
+-   **Memory Management**: Manages conversation history and context effectively
+-   **Web Frontend**: Provides a clean user interface built with standard web technologies
 
 ## Project Structure
 
-```plaintext
+```
 multi_agent_system/
-├── src/                                # Source code
-│   ├── agents/                         # Agent implementations
-│   │   ├── orchestrator/               # Main orchestration logic
-│   │   ├── rag/                        # RAG agent for document Q&A
-│   │   ├── researcher/                 # Research agent for web search
-│   │   ├── summarizer/                 # Summarizer agent for document processing
-│   │   └── react/                      # Diagram agent using prebuilt react agent
-│   ├── utils/                          # Shared utilities
-│   └── config.py                       # System configuration
 │
-├── .env.example                        # Environment template
-├── .gitignore                          # Git ignore rules
-├── .pre-commit-config.yaml             # Pre-commit hooks configuration
-├── langgraph.json                      # LangGraph configuration
-├── pyproject.toml                      # Project and dependency configuration
-├── README.md                           # Project documentation
-└── uv.lock                             # UV dependency lock file
+├── data/                      # Data storage
+│   └── chroma_db/             # Vector database storage
+│
+├── docs/                      # Documentation files
+│
+├── examples/                  # Example usage patterns
+│
+├── src/
+│   ├── backend/               # Backend server and agent logic
+│   │   ├── agents/            # Agent implementations
+│   │   │   ├── knowledge/     # Knowledge retrieval agent
+│   │   │   ├── orchestrator/  # Central router logic
+│   │   │   └── summarizer/    # Document summarization agent
+│   │   ├── utils/             # Shared utilities
+│   │   ├── app.py             # FastAPI application
+│   │   ├── config.py          # Configuration management
+│   │   └── routes.py          # API endpoints
+│   │
+│   └── static/                # Frontend assets
+│       ├── js/                # JavaScript files
+│       └── styles/            # CSS files
+│
+└── langgraph.json            # LangGraph configuration file
 ```
 
-### Key Components & LangGraph Patterns
+## Quick Start
 
-Each agent demonstrates different LangGraph concepts and patterns:
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/cgoncalves94/multi_agent_system.git
+    cd multi_agent_system
+    ```
 
-- **Orchestrator Agent**: Implements supervisor routing architecture with structured outputs
-  - Uses LangGraph's routing capabilities to direct queries
-  - Demonstrates state management across multiple agents
-  - Implements supervisor-based multi-agent coordination
+2.  Install `uv` (recommended for faster, more reliable dependency management):
+    ```bash
+    # On Unix-like systems
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
-- **RAG Agent**: Showcases tool calling and vector store integration
-  - Implements sophisticated tool calling patterns
-  - Demonstrates RAG pattern with vector database integration
-  - Uses structured outputs for query optimization and context analysis
+    # On Windows PowerShell
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+    ```
 
-- **Research Agent**: Demonstrates parallel processing and result synthesis
-  - Uses parallel execution for web and wiki searches
-  - Shows tool calling with multiple external APIs
-  - Implements result combination using LangGraph's state management
+3.  Create a virtual environment and install dependencies:
+    ```bash
+    # Create and activate virtual environment
+    uv venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-- **Summarizer Agent**: Implements map-reduce parallelization
-  - Uses LangGraph's Send API for parallel chunk processing
-  - Demonstrates map-reduce pattern for document processing
-  - Shows efficient state management in parallel operations
+    # Install dependencies from pyproject.toml
+    uv pip install -e .
+    ```
 
-- **Diagram Agent**: Shows prebuilt agent integration
-  - Demonstrates using LangGraph's create_react_agent
-  - Shows how to plug prebuilt agents into custom graphs
-  - Implements tool-based ReAct pattern
+4.  Set up your environment variables:
+    ```bash
+    cp src/backend/.env.example src/backend/.env
+    # Edit .env with your API keys (see Configuration section)
+    ```
 
-The system also showcases:
-- Subgraphs for better organization and reusability
-- Persistent state management using SQLite checkpointing
-- Structured outputs across all agents
-- Memory management for conversation context
+5.  Run the application:
+    ```bash
+    uv run langgraph dev --no-browser
+    ```
+    The API and web interface will be available at `http://127.0.0.1:2024`, with the web interface mounted at `/static/index.html`.
 
-## Development Setup
+## Development
 
 ### Dependencies
-
 All project dependencies are managed in `pyproject.toml`:
-
-- **Core Dependencies**: LangChain, LangGraph, and related packages
-- **Development Dependencies**: Testing, linting, and formatting tools
-
-To update dependencies:
-```bash
-# Update all dependencies to their latest compatible versions
-uv pip compile pyproject.toml -o uv.lock
-
-# Install updated dependencies
-uv pip install -e
-```
+-   **Core Dependencies**: LangChain, LangGraph, FastAPI, and related packages.
+-   **Development Dependencies**: Tools for testing, linting, and formatting.
 
 ### Pre-commit Hooks
-
 We use pre-commit hooks to ensure code quality. To set up:
 ```bash
 pre-commit install
 ```
-
-To run the hooks manually:
+To run the hooks manually on all files:
 ```bash
 pre-commit run --all-files
 ```
 
-## Environment Variables
+## Configuration
 
-Required API keys and configurations (see `.env.example`):
-- `OPENAI_API_KEY`: For LLM and embeddings
-- `TAVILY_API_KEY`: For web search
-- `LANGCHAIN_API_KEY`: For LangSmith tracing (optional)
+The system requires API keys and other settings defined in an `.env` file (copied from `.env.example`):
+-   `OPENAI_API_KEY`: For LLM access and embeddings.
+-   `TAVILY_API_KEY`: For the Tavily search API used by the Knowledge Agent.
+-   `LANGSMITH_API_KEY`: For tracing and debugging with LangSmith.
 
-## Status
-
-🚧 **Work in Progress** 🚧
-
-This project is under active development. Features and documentation will be updated regularly.
 
 ## License
 
