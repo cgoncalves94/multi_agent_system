@@ -247,6 +247,94 @@ async def test_get_conversation_by_id_empty_messages(async_client: AsyncClient):
     assert "created_at" in mock_create.call_args[1]['metadata']
     mock_get_state.assert_called_once_with(thread_id)
 
+async def test_delete_all_threads_success(async_client: AsyncClient):
+    """Test DELETE /api/conversations successfully deletes all threads."""
+    mock_threads_found = [
+        {"thread_id": "thread_to_delete_1"},
+        {"thread_id": "thread_to_delete_2"},
+        {"thread_id": "thread_to_delete_3"},
+    ]
+    
+    with patch("src.backend.routes.langgraph_client.threads.search", new_callable=AsyncMock) as mock_search,          patch("src.backend.routes.langgraph_client.threads.delete", new_callable=AsyncMock) as mock_delete:
+        
+        mock_search.return_value = mock_threads_found
+        # mock_delete.return_value = None # Default AsyncMock behavior is fine for successful deletion
+
+        response = await async_client.delete("/api/conversations")
+
+    assert response.status_code == 200
+    json_response = response.json()
+    assert json_response == {"success": True, "message": f"Successfully deleted {len(mock_threads_found)} threads"}
+    
+    mock_search.assert_called_once_with(limit=1000)
+    assert mock_delete.call_count == len(mock_threads_found)
+    for thread in mock_threads_found:
+        mock_delete.assert_any_call(thread["thread_id"])
+
+async def test_delete_all_threads_no_threads_exist(async_client: AsyncClient):
+    """Test DELETE /api/conversations when no threads exist."""
+    with patch("src.backend.routes.langgraph_client.threads.search", new_callable=AsyncMock) as mock_search,          patch("src.backend.routes.langgraph_client.threads.delete", new_callable=AsyncMock) as mock_delete:
+        
+        mock_search.return_value = [] # No threads found
+        
+        response = await async_client.delete("/api/conversations")
+
+    assert response.status_code == 200
+    json_response = response.json()
+    assert json_response == {"success": True, "message": "Successfully deleted 0 threads"}
+    
+    mock_search.assert_called_once_with(limit=1000)
+    mock_delete.assert_not_called()
+
+async def test_delete_all_threads_search_fails(async_client: AsyncClient):
+    """Test DELETE /api/conversations when langgraph_client.threads.search fails."""
+    with patch("src.backend.routes.langgraph_client.threads.search", new_callable=AsyncMock) as mock_search:
+        mock_search.side_effect = Exception("LangGraph client error during search")
+        
+        response = await async_client.delete("/api/conversations")
+
+    assert response.status_code == 409 # ConflictError from the route's exception handling
+    json_response = response.json()
+    assert json_response["error"]["code"] == "BULK_DELETE_ERROR"
+    assert "Failed to delete all threads: LangGraph client error during search" in json_response["error"]["detail"]
+    
+    mock_search.assert_called_once_with(limit=1000)
+
+async def test_delete_all_threads_one_delete_fails(async_client: AsyncClient):
+    """Test DELETE /api/conversations when one of the delete calls fails (should still continue)."""
+    mock_threads_found = [
+        {"thread_id": "thread_ok_1"},
+        {"thread_id": "thread_fail_2"}, # This one will fail
+        {"thread_id": "thread_ok_3"},
+    ]
+    
+    # Expected successful deletions = 2
+    expected_deleted_count = 2 
+
+    with patch("src.backend.routes.langgraph_client.threads.search", new_callable=AsyncMock) as mock_search,          patch("src.backend.routes.langgraph_client.threads.delete", new_callable=AsyncMock) as mock_delete:
+        
+        mock_search.return_value = mock_threads_found
+        
+        # Configure mock_delete to fail for a specific thread_id
+        async def delete_side_effect(thread_id):
+            if thread_id == "thread_fail_2":
+                raise Exception("Simulated delete failure for thread_fail_2")
+            return None # Successful deletion for others
+        mock_delete.side_effect = delete_side_effect
+        
+        response = await async_client.delete("/api/conversations")
+
+    assert response.status_code == 200 # Endpoint itself succeeds even if some individual deletes fail
+    json_response = response.json()
+    # The message reflects the count of *successful* deletions based on current routes.py logic
+    assert json_response == {"success": True, "message": f"Successfully deleted {expected_deleted_count} threads"}
+    
+    mock_search.assert_called_once_with(limit=1000)
+    assert mock_delete.call_count == len(mock_threads_found) # Delete is attempted for all
+    mock_delete.assert_any_call("thread_ok_1")
+    mock_delete.assert_any_call("thread_fail_2") # Attempted
+    mock_delete.assert_any_call("thread_ok_3")
+
 async def test_delete_thread_success(async_client: AsyncClient):
     """Test DELETE /api/conversations/{thread_id} successfully deletes a thread."""
     thread_id = "thread_to_delete_123"

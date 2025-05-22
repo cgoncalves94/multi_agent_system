@@ -1,0 +1,49 @@
+name: Run Python Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"] # Specify python versions to test against
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+      # Alternatively, use a dedicated action to install Poetry if preferred:
+      # uses: snok/install-poetry@v1
+      # with:
+      #   version: latest # or a specific version
+      #   virtualenvs-create: true
+      #   virtualenvs-in-project: true
+
+
+    - name: Install dependencies with Poetry
+      run: |
+        poetry install --no-interaction --no-root
+        # If you have dev dependencies in a specific group (e.g., [tool.poetry.group.dev.dependencies])
+        # and they are not installed by default, you might need:
+        # poetry install --no-interaction --no-root --with dev
+        # However, typically `pytest` and other testing tools are in the main dev group which is installed by default.
+
+    - name: Run tests with pytest
+      run: |
+        poetry run pytest
+        # If tests are not in the root or a standard 'tests' directory, specify path:
+        # poetry run pytest ./tests
