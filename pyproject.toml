@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "multi_agent_system"
 version = "0.1.0"
 description = "A sophisticated multi-agent system using LangChain and LangGraph"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 authors = [
     {name = "Cesar Goncalves", email = "goncalves.cesaraugusto94@gmail.com"},
 ]
