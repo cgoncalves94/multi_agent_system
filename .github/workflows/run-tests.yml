@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"] # Updated Python versions
+        python-version: ["3.11", "3.12"] # Python versions to test against
 
     steps:
     - name: Checkout code
@@ -32,7 +32,6 @@ jobs:
       run: |
         poetry cache clear --all pypi -n
         poetry cache clear --all _default_cache -n
-      # Add other cache clear commands if necessary, though these are the main ones.
 
     - name: Print debug information
       run: |
@@ -41,14 +40,19 @@ jobs:
         echo "pyproject.toml requires-python: $(grep 'requires-python' pyproject.toml || echo 'requires-python not found')"
         echo "Poetry env info:"
         poetry env info
+        echo "Listing files in current directory:"
+        ls -la
+
+    - name: Remove poetry.lock
+      run: |
+        rm -f poetry.lock
+        echo "poetry.lock removed (if it existed)."
+        ls -la # Confirm it's gone or was never there
 
     - name: Install dependencies with Poetry
       run: |
-        # Attempt to remove poetry.lock if it might be causing issues, then install
-        # This is a more aggressive debugging step; can be removed if not needed.
-        # rm -f poetry.lock
         poetry install --no-interaction --no-root --verbose
-        # The --verbose flag will give more output if install fails
+        # If install succeeds, a new poetry.lock will be generated based on pyproject.toml
 
     - name: Run tests with pytest
       run: |

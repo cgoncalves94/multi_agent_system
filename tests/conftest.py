@@ -1,9 +1,7 @@
 import pytest
 from httpx import AsyncClient
-from src.backend.app import (
-    app,
-)  # Assuming your FastAPI app instance is named 'app' in main.py or app.py
-
+from fastapi.testclient import TestClient
+from src.backend.app import app # Assuming your FastAPI app instance is named 'app' in main.py or app.py
 
 @pytest.fixture(scope="session")
 def client():
@@ -15,16 +13,10 @@ def client():
     # This fixture might not be used if all tests are async
     pass
 
-
-@pytest.fixture(
-    scope="function"
-)  # Use "function" scope for async client if tests need isolation
+@pytest.fixture(scope="function") # Use "function" scope for async client if tests need isolation
 async def async_client():
-    async with AsyncClient(
-        app=app, base_url="http://127.0.0.1:8000"
-    ) as ac:  # Ensure base_url matches your test server setup
+    async with AsyncClient(app=app, base_url="http://127.0.0.1:8000") as ac: # Ensure base_url matches your test server setup
         yield ac
-
 
 # If you need to override dependencies for testing, you can do it here.
 # For example, mocking an external service client:
