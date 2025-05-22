@@ -46,7 +46,7 @@ jobs:
       run: |
         # Attempt to remove poetry.lock if it might be causing issues, then install
         # This is a more aggressive debugging step; can be removed if not needed.
-        # rm -f poetry.lock 
+        # rm -f poetry.lock
         poetry install --no-interaction --no-root --verbose
         # The --verbose flag will give more output if install fails
 
