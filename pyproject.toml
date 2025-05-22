@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "multi_agent_system"
 version = "0.1.0"
 description = "A sophisticated multi-agent system using LangChain and LangGraph"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 authors = [
     {name = "Cesar Goncalves", email = "goncalves.cesaraugusto94@gmail.com"},
 ]
@@ -15,7 +15,7 @@ dependencies = [
     "langchain-openai==0.3.16",
     "langgraph==0.4.3",
     "langchain-core==0.3.59",
-    "langchain-community==0.3.24",
+    "langchain-community==0.3.21",
     "langchain-chroma==0.2.3",
     "fastapi==0.115.12",
     "uvicorn==0.34.2",
